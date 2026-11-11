@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Konfigurátor chaty · Česká chata</title>
+<style>
+  /* barvy, písma a tlačítka podle www.ceskachata.cz */
+  :root {
+    --chata-brown: #3d2b1f; --chata-brown-dark: #2a1d15; --chata-accent: #5c3d2e;
+    --chata-cream: #faf8f5; --chata-cream-dark: #f0ebe3;
+    --chata-green: #4a6741; --chata-green-dark: #3a5333; --chata-gold: #c4a265;
+    --border: #e0dad1; --muted: #7a6a5f;
+    --font-serif: "Playfair Display", Georgia, serif;
+    --font-sans: "DM Sans", system-ui, sans-serif;
+    --radius: 4px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--chata-cream); color: var(--chata-brown); font: 16px/1.5 var(--font-sans); }
+  a { color: inherit; }
+
+  .top { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 24px; height: 64px; padding: 0 24px;
+         background: rgba(250, 248, 245, .96); border-bottom: 1px solid var(--border); box-shadow: 0 1px 3px rgba(61, 43, 31, .06); }
+  .brand { font-weight: 700; font-size: 18px; letter-spacing: .06em; text-decoration: none; }
+  .top nav { flex: 1; display: flex; gap: 24px; justify-content: center; font-size: 14px; }
+  .top nav a { text-decoration: none; color: #5c4a3f; }
+  .top nav a:hover { color: var(--chata-brown); }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: var(--radius);
+         font: 600 14px/20px var(--font-sans); padding: 10px 20px; text-decoration: none; cursor: pointer; transition: background .15s; }
+  .btn-green { background: var(--chata-green); color: #fff; }
+  .btn-green:hover { background: var(--chata-green-dark); }
+  .btn-outline { background: transparent; color: var(--chata-gold); border: 1px solid rgba(196, 162, 101, .6); }
+  .btn-outline:hover { background: rgba(196, 162, 101, .08); }
+  .btn:focus-visible, .chip:focus-visible, .choice:focus-visible { outline: 2px solid var(--chata-gold); outline-offset: 2px; }
+
+  #app { display: grid; grid-template-columns: minmax(0, 1fr) 440px; height: calc(100vh - 64px); }
+  #view { position: relative; min-width: 0; background: linear-gradient(180deg, var(--chata-cream) 0%, var(--chata-cream-dark) 100%); }
+  #view canvas { display: block; width: 100%; height: 100%; outline: none; touch-action: none; }
+  #hint { position: absolute; left: 24px; bottom: 20px; font-size: 13px; color: var(--muted); pointer-events: none; }
+
+  aside { background: #fff; border-left: 1px solid var(--border); overflow-y: auto; padding: 32px 32px 40px; }
+  .eyebrow { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--chata-gold); }
+  .rule { width: 40px; height: 1px; background: var(--chata-gold); margin: 12px 0 16px; }
+  h1 { font: 400 34px/1.15 var(--font-serif); margin: 0 0 8px; }
+  .lead { margin: 0 0 24px; color: var(--muted); font-size: 15px; }
+
+  .group { border-top: 1px solid var(--border); padding-top: 18px; margin-top: 18px; }
+  .group > h2 { font: 400 20px/1.3 var(--font-serif); margin: 0 0 12px; }
+  .opt + .opt { margin-top: 16px; }
+  .opt-head { display: flex; justify-content: space-between; font-size: 14px; color: #5c4a3f; margin-bottom: 8px; }
+  .opt-head b { font-weight: 600; color: var(--chata-brown); font-variant-numeric: tabular-nums; }
+  .chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(46px, 1fr)); gap: 6px; }
+  .chip { padding: 7px 4px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--chata-cream);
+          font: 500 14px/20px var(--font-sans); color: var(--chata-brown); cursor: pointer; font-variant-numeric: tabular-nums; }
+  .chip:hover { border-color: var(--chata-gold); }
+  .chip.on { background: var(--chata-brown); border-color: var(--chata-brown); color: #fff; }
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .choice { text-align: left; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--chata-cream);
+            font: inherit; color: inherit; cursor: pointer; display: flex; flex-direction: column; gap: 2px; }
+  .choice:hover { border-color: var(--chata-gold); }
+  .choice .t { font-weight: 600; font-size: 15px; }
+  .choice .d { font-size: 13px; color: var(--muted); }
+  .choice .p { font-size: 13px; color: var(--chata-green); font-weight: 600; font-variant-numeric: tabular-nums; margin-top: 4px; }
+  .choice.on { background: #fff; border-color: var(--chata-brown); box-shadow: inset 0 0 0 1px var(--chata-brown); }
+  .choice.on .p { color: var(--muted); font-weight: 500; }
+
+  .price { margin-top: 24px; background: var(--chata-brown); color: var(--chata-cream); border-radius: var(--radius); padding: 24px; }
+  .price .eyebrow { color: var(--chata-gold); }
+  .price .big { font: 700 32px/1.15 var(--font-serif); margin: 10px 0 2px; font-variant-numeric: tabular-nums; }
+  .price .sub { font-size: 14px; color: #cfc3b5; }
+  .price dl { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; margin: 16px 0 20px; padding-top: 14px; border-top: 1px solid rgba(196, 162, 101, .25); font-size: 14px; }
+  .price dt { color: #cfc3b5; } .price dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+  .price .btn { width: 100%; padding: 14px 20px; }
+  .price .btn + .btn { margin-top: 8px; }
+  #chapters { display: none; margin-top: 16px; font-size: 13px; }
+  #chapters.open { display: block; }
+  #chapters div { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; border-bottom: 1px solid rgba(196, 162, 101, .15); font-variant-numeric: tabular-nums; }
+  #chapters .zero { color: #8d7f73; }
+  .note { font-size: 12px; color: var(--muted); margin: 16px 0 0; }
+
+  @media (max-width: 900px) {
+    .top nav { display: none; }
+    .top { justify-content: space-between; padding: 0 16px; }
+    #app { grid-template-columns: 1fr; height: auto; }
+    #view { height: 56vh; }
+    aside { border-left: 0; border-top: 1px solid var(--border); padding: 24px 16px 32px; }
+    h1 { font-size: 28px; }
+  }
+  @media (max-width: 420px) { .top .btn { padding: 8px 12px; font-size: 13px; } .choices { grid-template-columns: 1fr; } }
+</style>
+<script>
+  // skripty leží vedle stránky ve složce js/; funguje na /konfigurator (Next.js odstraňuje koncové lomítko) i jinde
+  (function () {
+    var p = location.pathname, base = /\/$/.test(p) ? p : /\.[a-z]+$/i.test(p) ? p.replace(/[^/]*$/, '') : p + '/';
+    document.write('<base href="' + base + '">');
+  })();
+</script>
+<script src="js/chata-ceny.js"></script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="https://www.ceskachata.cz/">Česká chata</a>
+  <nav>
+    <a href="https://www.ceskachata.cz/#chata">Chata</a>
+    <a href="https://www.ceskachata.cz/#jak-to-funguje">Jak to funguje</a>
+    <a href="https://www.ceskachata.cz/#cena">Cena</a>
+    <a href="https://www.ceskachata.cz/#galerie">Galerie</a>
+    <a href="https://www.ceskachata.cz/#kontakt">Kontakt</a>
+  </nav>
+  <a class="btn btn-green" href="https://www.ceskachata.cz/#kontakt">Nezávazná konzultace</a>
+</header>
+<main id="app">
+  <div id="view">
+    <div id="hint">Tažením chatu otočíte, kolečkem přiblížíte.</div>
+  </div>
+  <aside>
+    <p class="eyebrow">Konfigurátor</p>
+    <div class="rule"></div>
+    <h1>Sestavte si svou chatu</h1>
+    <p class="lead">Zvolte rozměry a provedení. Cena se přepočítá z podrobného rozpočtu stavby.</p>
+
+    <section class="group"><h2>Rozměry</h2><div id="dims"></div></section>
+    <section class="group"><h2>Provedení</h2><div id="variants"></div></section>
+
+    <div class="price">
+      <p class="eyebrow">Orientační cena</p>
+      <div class="big"><span id="o-bez"></span> <span style="font-size:20px">bez DPH</span></div>
+      <div class="sub">s DPH 12 %: <span id="o-s"></span></div>
+      <dl>
+        <dt>Rozměry (líc rámu)</dt><dd id="o-dim"></dd>
+        <dt>Zastavěná plocha</dt><dd id="o-az"></dd>
+        <dt>Podlahová plocha</dt><dd id="o-ap"></dd>
+        <dt>z toho podkroví nad 1,2 m</dt><dd id="o-au"></dd>
+      </dl>
+      <a class="btn btn-green" id="cta" href="https://www.ceskachata.cz/#kontakt">Nezávazná konzultace</a>
+      <button class="btn btn-outline" id="toggle-ch" type="button" aria-expanded="false">Rozpočet po kapitolách</button>
+      <div id="chapters"></div>
+    </div>
+    <p class="note">Kompletní dodávka a montáž včetně základové desky, dopravy a lešení. Cena nezahrnuje pozemek, přípojky a terénní úpravy.</p>
+  </aside>
+</main>
+<script type="module" src="js/chata.js"></script>
+</body>
+</html>
