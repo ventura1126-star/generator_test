@@ -409,7 +409,7 @@ function build(r) {
 
   // balkon ve štítu: na konzolách, pod přesahem střechy, zábradlí z vodorovných prken
   if (v.bal) {
-    const bd = v.bd, bw = W - 2 * v.bok, x1 = L / 2 + bd;
+    const bd = v.bd, bw = v.bw, x1 = L / 2 + bd; // šířka z rozpočtu: zábradlí se vejde pod střechu
     for (const z of [-bw / 2 + 0.3, 0, bw / 2 - 0.3]) {
       const k = konzola(bd, 0.24, 0.14, M.beam);
       k.rotation.y = Math.PI / 2; // ven ze štítu (+x)
