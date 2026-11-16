@@ -23,10 +23,11 @@ const OPTS = [
   { key: 'bal', group: 'variants', label: 'Balkon ve štítu', values: [0, 1],
     names: ['Bez balkonu', 'S balkonem'], desc: ['Okna ve štítu', 'Pod přesahem střechy'] },
 ];
-const state = { W: 6, L: 8, exp: 1, bal: 0, fas: 1 };
+const state = { W: 6, L: 8, exp: 1, bal: 0, fas: 1, dph: 12 };
+const DPH = [12, 21]; // sazba záleží na stavebním záměru: rodinný dům 12 %, rekreační objekt 21 %
 for (const [k, v] of new URLSearchParams(location.hash.slice(1))) {
   const o = OPTS.find((o) => o.key === k);
-  if (o && o.values.includes(+v)) state[k] = +v;
+  if ((o && o.values.includes(+v)) || (k === 'dph' && DPH.includes(+v))) state[k] = +v;
 }
 
 const fmtNum = (x, d = 0) => x.toLocaleString('cs-CZ', { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -53,6 +54,8 @@ for (const o of OPTS) {
   o.el = div;
   document.getElementById(o.group).appendChild(div);
 }
+document.querySelectorAll('.vat button').forEach((b) =>
+  b.addEventListener('click', () => { state.dph = +b.dataset.dph; update(); }));
 document.getElementById('toggle-ch').addEventListener('click', (e) => {
   const open = document.getElementById('chapters').classList.toggle('open');
   e.currentTarget.setAttribute('aria-expanded', open);
@@ -453,7 +456,13 @@ function update() {
   document.getElementById('o-ap').textContent = `${fmtNum(v.Ap1 + v.Ap2, 1)} m²`;
   document.getElementById('o-au').textContent = `${fmtNum(v.Au2, 1)} m²`;
   tween('o-bez', r.bezDph);
-  tween('o-s', r.sDph);
+  tween('o-s', r.bezDph * (1 + state.dph / 100));
+  document.getElementById('o-rate').textContent = state.dph + ' %';
+  document.querySelectorAll('.vat button').forEach((b) => {
+    const on = +b.dataset.dph === state.dph;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', on);
+  });
 
   if (!r.chapters) document.getElementById('toggle-ch').hidden = true;
   else document.getElementById('chapters').innerHTML = r.chapters.map((c) => {
