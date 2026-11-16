@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Konfigurátor chaty · Česká chata</title>
+<title>Konfigur√°tor chaty ¬∑ ńĆesk√° chata</title>
 <style>
-  /* barvy, písma a tlačítka podle www.ceskachata.cz */
+  /* barvy, p√≠sma a tlańć√≠tka podle www.ceskachata.cz */
   :root {
     --chata-brown: #3d2b1f; --chata-brown-dark: #2a1d15; --chata-accent: #5c3d2e;
     --chata-cream: #faf8f5; --chata-cream-dark: #f0ebe3;
@@ -16,6 +16,7 @@
     --radius: 4px;
   }
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   html, body { margin: 0; height: 100%; }
   body { background: var(--chata-cream); color: var(--chata-brown); font: 16px/1.5 var(--font-sans); }
   a { color: inherit; }
@@ -70,6 +71,12 @@
   .price .eyebrow { color: var(--chata-gold); }
   .price .big { font: 700 32px/1.15 var(--font-serif); margin: 10px 0 2px; font-variant-numeric: tabular-nums; }
   .price .sub { font-size: 14px; color: #cfc3b5; }
+  .vat { display: flex; gap: 6px; margin-top: 12px; }
+  .vat button { flex: 1; background: transparent; border: 1px solid rgba(196, 162, 101, .45); color: #cfc3b5; border-radius: var(--radius);
+                padding: 6px 8px; font: 500 12px/16px var(--font-sans); cursor: pointer; }
+  .vat button:hover { border-color: var(--chata-gold); }
+  .vat button.on { background: var(--chata-gold); border-color: var(--chata-gold); color: var(--chata-brown-dark); font-weight: 600; }
+  .vat button:focus-visible { outline: 2px solid var(--chata-gold); outline-offset: 2px; }
   .price dl { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; margin: 16px 0 20px; padding-top: 14px; border-top: 1px solid rgba(196, 162, 101, .25); font-size: 14px; }
   .price dt { color: #cfc3b5; } .price dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
   .price .btn { width: 100%; padding: 14px 20px; }
@@ -91,7 +98,7 @@
   @media (max-width: 420px) { .top .btn { padding: 8px 12px; font-size: 13px; } .choices { grid-template-columns: 1fr; } }
 </style>
 <script>
-  // skripty leží vedle stránky ve složce js/; funguje na /konfigurator (Next.js odstraňuje koncové lomítko) i jinde
+  // skripty leŇĺ√≠ vedle str√°nky ve sloŇĺce js/; funguje na /konfigurator (Next.js odstraŇąuje koncov√© lom√≠tko) i jinde
   (function () {
     var p = location.pathname, base = /\/$/.test(p) ? p : /\.[a-z]+$/i.test(p) ? p.replace(/[^/]*$/, '') : p + '/';
     document.write('<base href="' + base + '">');
@@ -107,7 +114,7 @@
 </head>
 <body>
 <header class="top">
-  <a class="brand" href="https://www.ceskachata.cz/">Česká chata</a>
+  <a class="brand" href="https://www.ceskachata.cz/">ńĆesk√° chata</a>
   <nav>
     <a href="https://www.ceskachata.cz/#chata">Chata</a>
     <a href="https://www.ceskachata.cz/#jak-to-funguje">Jak to funguje</a>
@@ -115,36 +122,40 @@
     <a href="https://www.ceskachata.cz/#galerie">Galerie</a>
     <a href="https://www.ceskachata.cz/#kontakt">Kontakt</a>
   </nav>
-  <a class="btn btn-green" href="https://www.ceskachata.cz/#kontakt">Nezávazná konzultace</a>
+  <a class="btn btn-green" href="https://www.ceskachata.cz/#kontakt">Nez√°vazn√° konzultace</a>
 </header>
 <main id="app">
   <div id="view">
-    <div id="hint">Tažením chatu otočíte, kolečkem přiblížíte.</div>
+    <div id="hint">TaŇĺen√≠m chatu otońć√≠te, koleńćkem pŇôibl√≠Ňĺ√≠te.</div>
   </div>
   <aside>
-    <p class="eyebrow">Konfigurátor</p>
+    <p class="eyebrow">Konfigur√°tor</p>
     <div class="rule"></div>
     <h1>Sestavte si svou chatu</h1>
-    <p class="lead">Zvolte rozměry a provedení. Cena se přepočítá z podrobného rozpočtu stavby.</p>
+    <p class="lead">Zvolte rozmńõry a proveden√≠. Cena se pŇôepońć√≠t√° z podrobn√©ho rozpońćtu stavby.</p>
 
-    <section class="group"><h2>Rozměry</h2><div id="dims"></div></section>
-    <section class="group"><h2>Provedení</h2><div id="variants"></div></section>
+    <section class="group"><h2>Rozmńõry</h2><div id="dims"></div></section>
+    <section class="group"><h2>Proveden√≠</h2><div id="variants"></div></section>
 
     <div class="price">
-      <p class="eyebrow">Orientační cena</p>
+      <p class="eyebrow">Orientańćn√≠ cena</p>
       <div class="big"><span id="o-bez"></span> <span style="font-size:20px">bez DPH</span></div>
-      <div class="sub">s DPH 12 %: <span id="o-s"></span></div>
+      <div class="sub">s DPH <span id="o-rate"></span>: <span id="o-s"></span></div>
+      <div class="vat" role="group" aria-label="Sazba DPH">
+        <button type="button" data-dph="12">12 % ¬∑ rodinn√Ĺ dŇĮm</button>
+        <button type="button" data-dph="21">21 % ¬∑ rekreańćn√≠ objekt</button>
+      </div>
       <dl>
-        <dt>Rozměry (líc rámu)</dt><dd id="o-dim"></dd>
-        <dt>Zastavěná plocha</dt><dd id="o-az"></dd>
-        <dt>Podlahová plocha</dt><dd id="o-ap"></dd>
-        <dt>z toho podkroví nad 1,2 m</dt><dd id="o-au"></dd>
+        <dt>Rozmńõry (l√≠c r√°mu)</dt><dd id="o-dim"></dd>
+        <dt>Zastavńõn√° plocha</dt><dd id="o-az"></dd>
+        <dt>Podlahov√° plocha</dt><dd id="o-ap"></dd>
+        <dt>z toho podkrov√≠ nad 1,2 m</dt><dd id="o-au"></dd>
       </dl>
-      <a class="btn btn-green" id="cta" href="https://www.ceskachata.cz/#kontakt">Nezávazná konzultace</a>
-      <button class="btn btn-outline" id="toggle-ch" type="button" aria-expanded="false">Rozpočet po kapitolách</button>
+      <a class="btn btn-green" id="cta" href="https://www.ceskachata.cz/#kontakt">Nez√°vazn√° konzultace</a>
+      <button class="btn btn-outline" id="toggle-ch" type="button" aria-expanded="false">Rozpońćet po kapitol√°ch</button>
       <div id="chapters"></div>
     </div>
-    <p class="note">Kompletní dodávka a montáž včetně základové desky, dopravy a lešení. Cena nezahrnuje pozemek, přípojky a terénní úpravy.</p>
+    <p class="note">Kompletn√≠ dod√°vka a mont√°Ňĺ vńćetnńõ dopravy a leŇ°en√≠. Cena nezahrnuje z√°kladovou desku (oceŇąujeme zvl√°Ň°Ň•), pozemek, pŇô√≠pojky a ter√©nn√≠ √ļpravy.</p>
   </aside>
 </main>
 <script type="module" src="js/chata.js"></script>
