@@ -17,6 +17,11 @@
   }
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
+  /* vložení do webu (iframe): bez vlastní hlavičky a nadpisu, ty má stránka kolem */
+  .embed .top, .embed .intro { display: none !important; }
+  .embed #app { height: 100vh; }
+  .embed aside { padding-top: 24px; }
+  .embed .group:first-of-type { border-top: 0; margin-top: 0; padding-top: 0; }
   html, body { margin: 0; height: 100%; }
   body { background: var(--chata-cream); color: var(--chata-brown); font: 16px/1.5 var(--font-sans); }
   a { color: inherit; }
@@ -111,6 +116,10 @@
   "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
 } }
 </script>
+<script>
+  // ve vložení (iframe na ceskachata.cz) nebo s ?embed skryje hlavičku a nadpis
+  if (window.self !== window.top || /[?&]embed\b/.test(location.search)) document.documentElement.classList.add('embed');
+</script>
 </head>
 <body>
 <header class="top">
@@ -129,10 +138,12 @@
     <div id="hint">Tažením chatu otočíte, kolečkem přiblížíte.</div>
   </div>
   <aside>
-    <p class="eyebrow">Konfigurátor</p>
-    <div class="rule"></div>
-    <h1>Sestavte si svou chatu</h1>
-    <p class="lead">Zvolte rozměry a provedení. Cena se přepočítá z podrobného rozpočtu stavby.</p>
+    <div class="intro">
+      <p class="eyebrow">Konfigurátor</p>
+      <div class="rule"></div>
+      <h1>Sestavte si svou chatu</h1>
+      <p class="lead">Zvolte rozměry a provedení. Cena se přepočítá z podrobného rozpočtu stavby.</p>
+    </div>
 
     <section class="group"><h2>Rozměry</h2><div id="dims"></div></section>
     <section class="group"><h2>Provedení</h2><div id="variants"></div></section>
